@@ -31,7 +31,7 @@ func run(cur string, depth int, filer string, exclude string) int {
 	if err != nil {
 		return 1
 	}
-	cs = trimElem(cs, cur)
+	cs = removeFromSlice(cs, cur)
 	if len(cs) < 1 {
 		return 0
 	}
@@ -59,10 +59,10 @@ func toSlice(s string, sep string) []string {
 	return ss
 }
 
-func trimElem(elems []string, search string) []string {
+func removeFromSlice(elems []string, target string) []string {
 	var ss []string
 	for _, s := range elems {
-		if s != search {
+		if s != target {
 			ss = append(ss, strings.TrimSpace(s))
 		}
 	}
