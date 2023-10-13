@@ -31,7 +31,7 @@ func run(cur string, depth int, filer string, exclude string) int {
 	if err != nil {
 		return 1
 	}
-	cs = removeFromSlice(cs, cur)
+	cs = removeElem(cs, cur)
 	if len(cs) < 1 {
 		return 0
 	}
@@ -59,7 +59,7 @@ func toSlice(s string, sep string) []string {
 	return ss
 }
 
-func removeFromSlice(elems []string, target string) []string {
+func removeElem(elems []string, target string) []string {
 	var ss []string
 	for _, s := range elems {
 		if s != target {
