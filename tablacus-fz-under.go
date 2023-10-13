@@ -35,6 +35,9 @@ func run(cur string, depth int, filer string, exclude string) int {
 	if len(cs) < 1 {
 		return 0
 	}
+	if len(cs) == 1 {
+		return openDir(filer, cs[0])
+	}
 	idx, err := fuzzyfinder.Find(cs, func(i int) string {
 		rel, _ := filepath.Rel(cur, cs[i])
 		return rel
@@ -42,13 +45,15 @@ func run(cur string, depth int, filer string, exclude string) int {
 	if err != nil {
 		return 1
 	}
-	src := cs[idx]
-	if fi, err := os.Stat(src); err == nil && fi.IsDir() {
-		exec.Command(filer, src).Start()
-	} else {
-		return 1
+	return openDir(filer, cs[idx])
+}
+
+func openDir(filer string, path string) int {
+	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
+		exec.Command(filer, path).Start()
+		return 0
 	}
-	return 0
+	return 1
 }
 
 func toSlice(s string, sep string) []string {
