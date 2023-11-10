@@ -13,20 +13,28 @@ import (
 
 func main() {
 	var (
-		cur     string
-		depth   int
-		filer   string
-		exclude string
+		cur        string
+		depth      int
+		filer      string
+		exclude    string
+		fromParent bool
 	)
 	flag.StringVar(&cur, "cur", "", "current directory")
 	flag.IntVar(&depth, "depth", 1, "search depth")
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
+	flag.BoolVar(&fromParent, "from-parent", false, "search from parent of current directory")
 	flag.Parse()
-	os.Exit(run(cur, depth, filer, exclude))
+	os.Exit(run(cur, depth, filer, exclude, fromParent))
 }
 
-func run(cur string, depth int, filer string, exclude string) int {
+func run(cur string, depth int, filer string, exclude string, fromParent bool) int {
+	if fromParent {
+		cur = filepath.Dir(cur)
+		if !isValidPath(cur) {
+			return 0
+		}
+	}
 	cs, err := walk.GetChildItems(cur, depth, false, toSlice(exclude, ","))
 	if err != nil {
 		return 1
@@ -46,6 +54,11 @@ func run(cur string, depth int, filer string, exclude string) int {
 		return 1
 	}
 	return openDir(filer, cs[idx])
+}
+
+func isValidPath(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
 }
 
 func openDir(filer string, path string) int {
