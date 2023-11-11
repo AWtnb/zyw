@@ -30,6 +30,7 @@ func main() {
 
 func run(cur string, depth int, filer string, exclude string, fromParent bool) int {
 	if fromParent {
+		exclude = exclude + "," + filepath.Base(cur)
 		cur = filepath.Dir(cur)
 		if !isValidPath(cur) {
 			return 0
