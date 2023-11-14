@@ -44,9 +44,6 @@ func run(cur string, depth int, filer string, exclude string, fromParent bool) i
 	if len(cs) < 1 {
 		return 0
 	}
-	if len(cs) == 1 {
-		return openDir(filer, cs[0])
-	}
 	idx, err := fuzzyfinder.Find(cs, func(i int) string {
 		rel, _ := filepath.Rel(cur, cs[i])
 		return rel
