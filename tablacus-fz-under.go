@@ -69,6 +69,9 @@ func openDir(filer string, path string) int {
 
 func toSlice(s string, sep string) []string {
 	var ss []string
+	if len(s) < 1 {
+		return ss
+	}
 	for _, elem := range strings.Split(s, sep) {
 		ss = append(ss, strings.TrimSpace(elem))
 	}
