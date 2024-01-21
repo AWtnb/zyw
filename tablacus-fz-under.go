@@ -17,20 +17,18 @@ func main() {
 		cur     string
 		root    string
 		filer   string
-		depth   int
 		exclude string
 	)
 	flag.StringVar(&cur, "cur", "", "current directory")
 	flag.StringVar(&root, "root", "", "root directory")
-	flag.IntVar(&depth, "depth", -1, "search depth")
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
 	flag.Parse()
 	var fl Filer
 	fl.setPath(filer)
 	var cd CurrentDir
-	cd.setInfo(cur, root, toValidFiler(filer), depth, exclude)
-	os.Exit(run(fl, cd))
+	cd.setInfo(cur, root)
+	os.Exit(run(fl, cd, exclude))
 }
 
 type Filer struct {
@@ -46,8 +44,7 @@ func (fl *Filer) setPath(path string) {
 }
 
 func (fl Filer) open(path string) {
-	_, err := os.Stat(path)
-	if err != nil {
+	if _, err := os.Stat(path); err != nil {
 		exec.Command(fl.path).Start()
 		return
 	}
@@ -58,48 +55,35 @@ func (fl Filer) open(path string) {
 	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
 }
 
-func toValidFiler(path string) string {
-	if _, err := os.Stat(path); err == nil {
-		return path
-	}
-	return "explorer.exe"
-}
-
 type CurrentDir struct {
 	path       string
-	root       string
 	searchRoot string
-	filer      string
 	depth      int
-	exclude    string
 }
 
-func (cur *CurrentDir) setInfo(curPath string, root string, filer string, depth int, exclude string) {
+func (cur *CurrentDir) setInfo(curPath string, root string) {
 	cur.path = curPath
-	cur.root = root
-	cur.searchRoot, cur.depth = cur.configSearch()
-	cur.filer = filer
-	cur.exclude = exclude
+	cur.searchRoot, cur.depth = cur.configSearch(root)
 }
 
-func (cur CurrentDir) configSearch() (searchRoot string, depth int) {
+func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 	elems := strings.Split(cur.path, string(os.PathSeparator))
 	for i := 0; i <= len(elems); i++ {
 		ln := len(elems) - i
 		p := strings.Join(elems[0:ln], string(os.PathSeparator))
-		if filepath.Dir(p) == cur.root {
+		if filepath.Dir(p) == root {
 			searchRoot = p
 			depth = -1
 			return
 		}
 	}
 	searchRoot = cur.path
-	depth = 5
+	depth = 2
 	return
 }
 
-func (cur CurrentDir) getChildItemsFromRoot() (found []string, err error) {
-	de := walk.DirEntry{Root: cur.searchRoot, All: false, Depth: cur.depth, Exclude: cur.exclude}
+func (cur CurrentDir) getChildItemsFromRoot(exclude string) (found []string, err error) {
+	de := walk.DirEntry{Root: cur.searchRoot, All: false, Depth: cur.depth, Exclude: exclude}
 	if strings.HasPrefix(cur.searchRoot, "C:") {
 		return de.GetChildItem()
 	}
@@ -110,9 +94,19 @@ func (cur CurrentDir) getChildItemsFromRoot() (found []string, err error) {
 	return
 }
 
+func (cur CurrentDir) dropCurrent(childPaths []string) (paths []string) {
+	for _, p := range childPaths {
+		if p == cur.path {
+			continue
+		}
+		paths = append(paths, p)
+	}
+	return
+}
+
 func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
-	if len(childPaths) < 2 {
-		return cur.searchRoot, nil
+	if len(childPaths) < 1 {
+		return "", nil
 	}
 	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
 		rel, _ := filepath.Rel(cur.searchRoot, childPaths[i])
@@ -124,17 +118,19 @@ func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
 	return childPaths[idx], nil
 }
 
-func run(fl Filer, cur CurrentDir) int {
-	candidates, err := cur.getChildItemsFromRoot()
+func run(fl Filer, cur CurrentDir, exclude string) int {
+	candidates, err := cur.getChildItemsFromRoot(exclude)
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	se, err := cur.selectItem(candidates)
+	se, err := cur.selectItem(cur.dropCurrent(candidates))
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	fl.open(se)
+	if 0 < len(se) {
+		fl.open(se)
+	}
 	return 0
 }
