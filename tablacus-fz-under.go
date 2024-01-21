@@ -43,9 +43,8 @@ type CurrentDir struct {
 func (cur *CurrentDir) setInfo(curPath string, root string, filer string, depth int, exclude string) {
 	cur.path = curPath
 	cur.setRoot(root)
-	cur.setSearchRoot()
+	cur.searchRoot, cur.depth = cur.configSearch()
 	cur.setFiler(filer)
-	cur.depth = depth
 	cur.exclude = exclude
 }
 
@@ -57,17 +56,20 @@ func (cur *CurrentDir) setRoot(path string) {
 	cur.root = path
 }
 
-func (cur *CurrentDir) setSearchRoot() {
+func (cur CurrentDir) configSearch() (searchRoot string, depth int) {
 	elems := strings.Split(cur.path, string(os.PathSeparator))
 	for i := 0; i <= len(elems); i++ {
 		ln := len(elems) - i
 		p := strings.Join(elems[0:ln], string(os.PathSeparator))
 		if filepath.Dir(p) == cur.root {
-			cur.searchRoot = p
+			searchRoot = p
+			depth = -1
 			return
 		}
 	}
-	cur.searchRoot = cur.path
+	searchRoot = cur.path
+	depth = 5
+	return
 }
 
 func (cur *CurrentDir) setFiler(path string) {
