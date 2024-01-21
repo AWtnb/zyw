@@ -26,9 +26,43 @@ func main() {
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
 	flag.Parse()
+	var fl Filer
+	fl.setPath(filer)
 	var cd CurrentDir
-	cd.setInfo(cur, root, filer, depth, exclude)
-	os.Exit(run(cd))
+	cd.setInfo(cur, root, toValidFiler(filer), depth, exclude)
+	os.Exit(run(fl, cd))
+}
+
+type Filer struct {
+	path string
+}
+
+func (fl *Filer) setPath(path string) {
+	if _, err := os.Stat(path); err == nil {
+		fl.path = path
+		return
+	}
+	fl.path = "explorer.exe"
+}
+
+func (fl Filer) open(path string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		exec.Command(fl.path).Start()
+		return
+	}
+	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
+		exec.Command(fl.path, path).Start()
+		return
+	}
+	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
+}
+
+func toValidFiler(path string) string {
+	if _, err := os.Stat(path); err == nil {
+		return path
+	}
+	return "explorer.exe"
 }
 
 type CurrentDir struct {
@@ -42,18 +76,10 @@ type CurrentDir struct {
 
 func (cur *CurrentDir) setInfo(curPath string, root string, filer string, depth int, exclude string) {
 	cur.path = curPath
-	cur.setRoot(root)
+	cur.root = root
 	cur.searchRoot, cur.depth = cur.configSearch()
-	cur.setFiler(filer)
+	cur.filer = filer
 	cur.exclude = exclude
-}
-
-func (cur *CurrentDir) setRoot(path string) {
-	if path == "..." {
-		cur.root = filepath.Dir(filepath.Dir(cur.path))
-		return
-	}
-	cur.root = path
 }
 
 func (cur CurrentDir) configSearch() (searchRoot string, depth int) {
@@ -70,14 +96,6 @@ func (cur CurrentDir) configSearch() (searchRoot string, depth int) {
 	searchRoot = cur.path
 	depth = 5
 	return
-}
-
-func (cur *CurrentDir) setFiler(path string) {
-	if _, err := os.Stat(path); err == nil {
-		cur.filer = path
-		return
-	}
-	cur.filer = "explorer.exe"
 }
 
 func (cur CurrentDir) getChildItemsFromRoot() (found []string, err error) {
@@ -106,20 +124,7 @@ func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
 	return childPaths[idx], nil
 }
 
-func (cur CurrentDir) run(path string) {
-	_, err := os.Stat(path)
-	if err != nil {
-		exec.Command(cur.filer).Start()
-		return
-	}
-	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
-		exec.Command(cur.filer, path).Start()
-		return
-	}
-	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
-}
-
-func run(cur CurrentDir) int {
+func run(fl Filer, cur CurrentDir) int {
 	candidates, err := cur.getChildItemsFromRoot()
 	if err != nil {
 		fmt.Println(err)
@@ -130,6 +135,6 @@ func run(cur CurrentDir) int {
 		fmt.Println(err)
 		return 1
 	}
-	cur.run(se)
+	fl.open(se)
 	return 0
 }
