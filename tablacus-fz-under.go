@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,77 +14,121 @@ import (
 
 func main() {
 	var (
-		cur        string
-		depth      int
-		filer      string
-		exclude    string
-		fromParent bool
+		cur     string
+		root    string
+		filer   string
+		depth   int
+		exclude string
 	)
 	flag.StringVar(&cur, "cur", "", "current directory")
-	flag.IntVar(&depth, "depth", 1, "search depth")
+	flag.StringVar(&root, "root", "", "root directory")
+	flag.IntVar(&depth, "depth", -1, "search depth")
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
-	flag.BoolVar(&fromParent, "from-parent", false, "search from parent of current directory")
 	flag.Parse()
-	os.Exit(run(cur, depth, filer, exclude, fromParent))
+	os.Exit(run(cur, root, filer, depth, exclude))
 }
 
-func run(cur string, depth int, filer string, exclude string, fromParent bool) int {
-	if fromParent {
-		exclude = exclude + "," + filepath.Base(cur)
-		cur = filepath.Dir(cur)
-		if !isValidPath(cur) {
-			return 0
+type CurrentDir struct {
+	root       string
+	path       string
+	searchRoot string
+	filer      string
+	depth      int
+	exclude    string
+}
+
+func (cur *CurrentDir) setInfo(curPath string, root string, filer string, depth int, exclude string) {
+	cur.path = curPath
+	cur.setRoot(root)
+	cur.setSearchRoot()
+	cur.setFiler(filer)
+	cur.depth = depth
+	cur.exclude = exclude
+}
+
+func (cur *CurrentDir) setRoot(path string) {
+	if path == "..." {
+		cur.root = filepath.Dir(filepath.Dir(cur.path))
+		return
+	}
+	cur.root = path
+}
+
+func (cur *CurrentDir) setSearchRoot() {
+	elems := strings.Split(cur.path, string(os.PathSeparator))
+	for i := 0; i <= len(elems); i++ {
+		ln := len(elems) - i
+		p := strings.Join(elems[0:ln], string(os.PathSeparator))
+		if filepath.Dir(p) == cur.root {
+			cur.searchRoot = p
+			return
 		}
 	}
-	cs, err := walk.GetChildItems(cur, depth, false, toSlice(exclude, ","))
-	if err != nil {
-		return 1
+	cur.searchRoot = cur.path
+}
+
+func (cur *CurrentDir) setFiler(path string) {
+	if _, err := os.Stat(path); err == nil {
+		cur.filer = path
+		return
 	}
-	cs = removeElem(cs, cur)
-	if len(cs) < 1 {
-		return 0
+	cur.filer = "explorer.exe"
+}
+
+func (cur CurrentDir) getChildItemsFromRoot() (found []string, err error) {
+	de := walk.DirEntry{Root: cur.searchRoot, All: false, Depth: cur.depth, Exclude: cur.exclude}
+	if strings.HasPrefix(cur.searchRoot, "C:") {
+		return de.GetChildItem()
 	}
-	idx, err := fuzzyfinder.Find(cs, func(i int) string {
-		rel, _ := filepath.Rel(cur, cs[i])
+	found, err = de.GetChildItemWithEverything()
+	if err != nil || len(found) < 1 {
+		found, err = de.GetChildItem()
+	}
+	return
+}
+
+func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
+	if len(childPaths) < 2 {
+		return cur.searchRoot, nil
+	}
+	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
+		rel, _ := filepath.Rel(cur.searchRoot, childPaths[i])
 		return rel
 	})
 	if err != nil {
+		return "", err
+	}
+	return childPaths[idx], nil
+}
+
+func (cur CurrentDir) run(path string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		exec.Command(cur.filer).Start()
+		return
+	}
+	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
+		exec.Command(cur.filer, path).Start()
+		return
+	}
+	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
+}
+
+func run(curPath string, root string, filer string, depth int, exclude string) int {
+
+	var cur CurrentDir
+	cur.setInfo(curPath, root, filer, depth, exclude)
+	candidates, err := cur.getChildItemsFromRoot()
+	if err != nil {
+		fmt.Println(err)
 		return 1
 	}
-	return openDir(filer, cs[idx])
-}
-
-func isValidPath(filename string) bool {
-	_, err := os.Stat(filename)
-	return err == nil
-}
-
-func openDir(filer string, path string) int {
-	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
-		exec.Command(filer, path).Start()
-		return 0
+	se, err := cur.selectItem(candidates)
+	if err != nil {
+		fmt.Println(err)
+		return 1
 	}
-	return 1
-}
-
-func toSlice(s string, sep string) []string {
-	var ss []string
-	if len(s) < 1 {
-		return ss
-	}
-	for _, elem := range strings.Split(s, sep) {
-		ss = append(ss, strings.TrimSpace(elem))
-	}
-	return ss
-}
-
-func removeElem(elems []string, target string) []string {
-	var ss []string
-	for _, s := range elems {
-		if s != target {
-			ss = append(ss, strings.TrimSpace(s))
-		}
-	}
-	return ss
+	cur.run(se)
+	return 0
 }

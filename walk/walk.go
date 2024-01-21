@@ -2,50 +2,160 @@ package walk
 
 import (
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/AWtnb/tablacus-fz-under/everything"
 )
 
-func sliceContains(slc []string, str string) bool {
-	for _, v := range slc {
-		if v == str {
+type WalkException struct {
+	names []string
+}
+
+func (wex *WalkException) setNames(s string, sep string) {
+	if len(s) < 1 {
+		return
+	}
+	for _, elem := range strings.Split(s, sep) {
+		wex.names = append(wex.names, strings.TrimSpace(elem))
+	}
+}
+
+func (wex WalkException) contains(name string) bool {
+	for _, n := range wex.names {
+		if n == name {
 			return true
 		}
 	}
 	return false
 }
 
-func getDepth(path string) int {
-	return strings.Count(strings.TrimSuffix(path, string(filepath.Separator)), string(filepath.Separator))
+func (wex WalkException) isSkippablePath(path string) bool {
+	sep := string(os.PathSeparator)
+	if strings.Contains(path, sep+".") {
+		return true
+	}
+	for _, n := range wex.names {
+		if strings.Contains(path, sep+n+sep) || strings.HasSuffix(path, n) {
+			return true
+		}
+	}
+	return false
 }
 
-func GetChildItems(root string, depth int, all bool, exclude []string) ([]string, error) {
-	var items []string
-	if depth == 0 {
-		return items, nil
+func (wex WalkException) filter(paths []string) []string {
+	if len(wex.names) < 1 {
+		return paths
 	}
-	rd := getDepth(root)
-	err := filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
+	sl := []string{}
+	for i := 0; i < len(paths); i++ {
+		p := paths[i]
+		if wex.isSkippablePath(p) {
+			continue
+		}
+		sl = append(sl, p)
+	}
+	return sl
+}
+
+type ChildItems struct {
+	rootDepth int
+	maxDepth  int
+	sep       string
+	paths     []string
+}
+
+func (ci *ChildItems) setRoot(path string) {
+	ci.rootDepth = ci.getDepth(path)
+}
+
+func (ci ChildItems) getDepth(path string) int {
+	return strings.Count(strings.TrimSuffix(path, ci.sep), ci.sep)
+}
+
+func (ci ChildItems) isSkippableDepth(path string) bool {
+	return 0 < ci.maxDepth && ci.maxDepth < ci.getDepth(path)-ci.rootDepth
+}
+
+func (ci ChildItems) filterByDepth() []string {
+	if ci.maxDepth < 0 {
+		return ci.paths
+	}
+	sl := []string{}
+	for i := 0; i < len(ci.paths); i++ {
+		p := ci.paths[i]
+		if ci.isSkippableDepth(p) {
+			continue
+		}
+		sl = append(sl, p)
+	}
+	return sl
+}
+
+type DirEntry struct {
+	Root    string
+	All     bool
+	Depth   int
+	Exclude string
+}
+
+func (de DirEntry) getChildItemsHandler() ChildItems {
+	ci := ChildItems{maxDepth: de.Depth, sep: string(filepath.Separator)}
+	ci.setRoot(de.Root)
+	return ci
+}
+
+func (de DirEntry) getExceptionsHandler() WalkException {
+	var wex WalkException
+	wex.setNames(de.Exclude, ",")
+	return wex
+}
+
+func (de DirEntry) GetChildItemWithEverything() (found []string, err error) {
+	if de.Depth == 0 {
+		return
+	}
+	ci := de.getChildItemsHandler()
+	wex := de.getExceptionsHandler()
+	found, err = everything.Scan(de.Root, !de.All)
+	if err != nil {
+		return
+	}
+	if 0 < len(found) {
+		ci.paths = wex.filter(found)
+		found = ci.filterByDepth()
+	}
+	return
+}
+
+func (de DirEntry) GetChildItem() (found []string, err error) {
+	if de.Depth == 0 {
+		return
+	}
+	ci := de.getChildItemsHandler()
+	wex := de.getExceptionsHandler()
+	err = filepath.WalkDir(de.Root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if depth > 0 && getDepth(path)-rd > depth {
+		if ci.isSkippableDepth(path) {
 			return filepath.SkipDir
 		}
-		if sliceContains(exclude, info.Name()) {
+		if wex.contains(info.Name()) {
 			return filepath.SkipDir
 		}
 		if info.IsDir() {
 			if strings.HasPrefix(info.Name(), ".") {
 				return filepath.SkipDir
 			}
-			items = append(items, path)
+			found = append(found, path)
 		} else {
-			if all {
-				items = append(items, path)
+			if de.All {
+				found = append(found, path)
 			}
 		}
 		return nil
 	})
-	return items, err
+	return
 }
