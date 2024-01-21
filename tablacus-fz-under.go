@@ -26,12 +26,14 @@ func main() {
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
 	flag.Parse()
-	os.Exit(run(cur, root, filer, depth, exclude))
+	var cd CurrentDir
+	cd.setInfo(cur, root, filer, depth, exclude)
+	os.Exit(run(cd))
 }
 
 type CurrentDir struct {
-	root       string
 	path       string
+	root       string
 	searchRoot string
 	filer      string
 	depth      int
@@ -115,10 +117,7 @@ func (cur CurrentDir) run(path string) {
 	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
 }
 
-func run(curPath string, root string, filer string, depth int, exclude string) int {
-
-	var cur CurrentDir
-	cur.setInfo(curPath, root, filer, depth, exclude)
+func run(cur CurrentDir) int {
 	candidates, err := cur.getChildItemsFromRoot()
 	if err != nil {
 		fmt.Println(err)
