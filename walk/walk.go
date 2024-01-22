@@ -92,55 +92,51 @@ func (ci ChildItems) filterByDepth(paths []string) (filteredPaths []string) {
 	return
 }
 
-type DirEntry struct {
-	Root    string
-	All     bool
-	Depth   int
-	Exclude string
+type DirWalker struct {
+	All        bool
+	Root       string
+	childItems ChildItems
+	exeception WalkException
 }
 
-func (de DirEntry) getChildItemsHandler() ChildItems {
-	ci := ChildItems{maxDepth: de.Depth, sep: string(filepath.Separator)}
-	ci.setRoot(de.Root)
-	return ci
+func (dw *DirWalker) ChildItemsHandler(depth int) {
+	ci := ChildItems{maxDepth: depth, sep: string(os.PathSeparator)}
+	ci.setRoot(dw.Root)
+	dw.childItems = ci
 }
 
-func (de DirEntry) getExceptionsHandler() WalkException {
+func (dw *DirWalker) ExceptionHandler(exclude string) {
 	var wex WalkException
-	wex.setNames(de.Exclude, ",")
-	return wex
+	wex.setNames(exclude, ",")
+	dw.exeception = wex
 }
 
-func (de DirEntry) GetChildItemWithEverything() (found []string, err error) {
-	if de.Depth == 0 {
+func (dw DirWalker) GetChildItemWithEverything() (found []string, err error) {
+	if dw.childItems.maxDepth == 0 {
 		return
 	}
-	ci := de.getChildItemsHandler()
-	wex := de.getExceptionsHandler()
-	found, err = everything.Scan(de.Root, !de.All)
+	found, err = everything.Scan(dw.Root, !dw.All)
 	if err != nil {
 		return
 	}
 	if 0 < len(found) {
-		found = ci.filterByDepth(wex.filter(found))
+		found = dw.childItems.filterByDepth(dw.exeception.filter(found))
 	}
 	return
 }
 
-func (de DirEntry) GetChildItem() (found []string, err error) {
-	if de.Depth == 0 {
+func (dw DirWalker) GetChildItem() (found []string, err error) {
+	if dw.childItems.maxDepth == 0 {
 		return
 	}
-	ci := de.getChildItemsHandler()
-	wex := de.getExceptionsHandler()
-	err = filepath.WalkDir(de.Root, func(path string, info fs.DirEntry, err error) error {
+	err = filepath.WalkDir(dw.Root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if ci.isSkippableDepth(path) {
+		if dw.childItems.isSkippableDepth(path) {
 			return filepath.SkipDir
 		}
-		if wex.contains(info.Name()) {
+		if dw.exeception.contains(info.Name()) {
 			return filepath.SkipDir
 		}
 		if info.IsDir() {
@@ -149,7 +145,7 @@ func (de DirEntry) GetChildItem() (found []string, err error) {
 			}
 			found = append(found, path)
 		} else {
-			if de.All {
+			if dw.All {
 				found = append(found, path)
 			}
 		}
