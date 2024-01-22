@@ -7,57 +7,8 @@ import (
 	"strings"
 
 	"github.com/AWtnb/tablacus-fz-under/everything"
+	"github.com/AWtnb/tablacus-fz-under/walk/walkexception"
 )
-
-type WalkException struct {
-	names []string
-}
-
-func (wex *WalkException) setNames(s string, sep string) {
-	if len(s) < 1 {
-		return
-	}
-	for _, elem := range strings.Split(s, sep) {
-		wex.names = append(wex.names, strings.TrimSpace(elem))
-	}
-}
-
-func (wex WalkException) contains(name string) bool {
-	for _, n := range wex.names {
-		if n == name {
-			return true
-		}
-	}
-	return false
-}
-
-func (wex WalkException) isSkippablePath(path string) bool {
-	sep := string(os.PathSeparator)
-	if strings.Contains(path, sep+".") {
-		return true
-	}
-	for _, n := range wex.names {
-		if strings.Contains(path, sep+n+sep) || strings.HasSuffix(path, n) {
-			return true
-		}
-	}
-	return false
-}
-
-func (wex WalkException) filter(paths []string) []string {
-	if len(wex.names) < 1 {
-		return paths
-	}
-	sl := []string{}
-	for i := 0; i < len(paths); i++ {
-		p := paths[i]
-		if wex.isSkippablePath(p) {
-			continue
-		}
-		sl = append(sl, p)
-	}
-	return sl
-}
 
 type ChildItems struct {
 	rootDepth int
@@ -96,7 +47,7 @@ type DirWalker struct {
 	All        bool
 	Root       string
 	childItems ChildItems
-	exeception WalkException
+	exeception walkexception.WalkException
 }
 
 func (dw *DirWalker) ChildItemsHandler(depth int) {
@@ -106,8 +57,8 @@ func (dw *DirWalker) ChildItemsHandler(depth int) {
 }
 
 func (dw *DirWalker) ExceptionHandler(exclude string) {
-	var wex WalkException
-	wex.setNames(exclude, ",")
+	var wex walkexception.WalkException
+	wex.SetNames(exclude, ",")
 	dw.exeception = wex
 }
 
@@ -120,7 +71,7 @@ func (dw DirWalker) GetChildItemWithEverything() (found []string, err error) {
 		return
 	}
 	if 0 < len(found) {
-		found = dw.childItems.filterByDepth(dw.exeception.filter(found))
+		found = dw.childItems.filterByDepth(dw.exeception.Filter(found))
 	}
 	return
 }
@@ -136,7 +87,7 @@ func (dw DirWalker) GetChildItem() (found []string, err error) {
 		if dw.childItems.isSkippableDepth(path) {
 			return filepath.SkipDir
 		}
-		if dw.exeception.contains(info.Name()) {
+		if dw.exeception.Contains(info.Name()) {
 			return filepath.SkipDir
 		}
 		if info.IsDir() {
