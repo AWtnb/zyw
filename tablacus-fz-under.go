@@ -68,7 +68,7 @@ func (cur *CurrentDir) setInfo(curPath string, root string) {
 
 func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 	if root == "..." {
-		searchRoot = filepath.Dir(filepath.Dir(cur.path))
+		searchRoot = filepath.Dir(cur.path)
 		depth = 2
 		return
 	}
