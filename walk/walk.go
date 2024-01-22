@@ -7,53 +7,21 @@ import (
 	"strings"
 
 	"github.com/AWtnb/tablacus-fz-under/everything"
+	"github.com/AWtnb/tablacus-fz-under/walk/dirmember"
 	"github.com/AWtnb/tablacus-fz-under/walk/walkexception"
 )
-
-type ChildItems struct {
-	rootDepth int
-	maxDepth  int
-	sep       string
-}
-
-func (ci *ChildItems) setRoot(path string) {
-	ci.rootDepth = ci.getDepth(path)
-}
-
-func (ci ChildItems) getDepth(path string) int {
-	return strings.Count(strings.TrimSuffix(path, ci.sep), ci.sep)
-}
-
-func (ci ChildItems) isSkippableDepth(path string) bool {
-	return 0 < ci.maxDepth && ci.maxDepth < ci.getDepth(path)-ci.rootDepth
-}
-
-func (ci ChildItems) filterByDepth(paths []string) (filteredPaths []string) {
-	if ci.maxDepth < 0 {
-		filteredPaths = paths
-		return
-	}
-	for i := 0; i < len(paths); i++ {
-		p := paths[i]
-		if ci.isSkippableDepth(p) {
-			continue
-		}
-		filteredPaths = append(filteredPaths, p)
-	}
-	return
-}
 
 type DirWalker struct {
 	All        bool
 	Root       string
-	childItems ChildItems
+	member     dirmember.DirMember
 	exeception walkexception.WalkException
 }
 
 func (dw *DirWalker) ChildItemsHandler(depth int) {
-	ci := ChildItems{maxDepth: depth, sep: string(os.PathSeparator)}
-	ci.setRoot(dw.Root)
-	dw.childItems = ci
+	dm := dirmember.DirMember{MaxDepth: depth, Sep: string(os.PathSeparator)}
+	dm.SetRoot(dw.Root)
+	dw.member = dm
 }
 
 func (dw *DirWalker) ExceptionHandler(exclude string) {
@@ -63,7 +31,7 @@ func (dw *DirWalker) ExceptionHandler(exclude string) {
 }
 
 func (dw DirWalker) GetChildItemWithEverything() (found []string, err error) {
-	if dw.childItems.maxDepth == 0 {
+	if dw.member.MaxDepth == 0 {
 		return
 	}
 	found, err = everything.Scan(dw.Root, !dw.All)
@@ -71,20 +39,20 @@ func (dw DirWalker) GetChildItemWithEverything() (found []string, err error) {
 		return
 	}
 	if 0 < len(found) {
-		found = dw.childItems.filterByDepth(dw.exeception.Filter(found))
+		found = dw.member.FilterByDepth(dw.exeception.Filter(found))
 	}
 	return
 }
 
 func (dw DirWalker) GetChildItem() (found []string, err error) {
-	if dw.childItems.maxDepth == 0 {
+	if dw.member.MaxDepth == 0 {
 		return
 	}
 	err = filepath.WalkDir(dw.Root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if dw.childItems.isSkippableDepth(path) {
+		if dw.member.IsSkippableDepth(path) {
 			return filepath.SkipDir
 		}
 		if dw.exeception.Contains(info.Name()) {
