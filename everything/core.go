@@ -1,6 +1,6 @@
 // https://github.com/jof4002/Everything/blob/master/everything_windows_amd64.go
 
-package core
+package everything
 
 import (
 	"syscall"
