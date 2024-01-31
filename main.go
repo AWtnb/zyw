@@ -69,9 +69,10 @@ func (cur *CurrentDir) setInfo(curPath string, root string) {
 }
 
 func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
+	depthLimit := 5
 	if root == ".." {
 		searchRoot = filepath.Dir(cur.path)
-		depth = 2
+		depth = depthLimit
 		return
 	}
 	elems := strings.Split(cur.path, string(os.PathSeparator))
@@ -85,7 +86,7 @@ func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 		}
 	}
 	searchRoot = cur.path
-	depth = 5
+	depth = depthLimit
 	return
 }
 
