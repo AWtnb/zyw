@@ -88,9 +88,9 @@ func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 }
 
 func (cur CurrentDir) getChildItemsFromRoot(exclude string) (found []string, err error) {
-	dw := walk.DirWalker{All: false, Root: cur.searchRoot}
-	dw.ChildItemsHandler(cur.depth)
-	dw.ExceptionHandler(exclude)
+	dw := walk.Dir{All: false, Root: cur.searchRoot}
+	dw.SetWalkDepth(cur.depth)
+	dw.SetWalkException(exclude)
 	if strings.HasPrefix(cur.searchRoot, "C:") {
 		return dw.GetChildItem()
 	}
