@@ -85,7 +85,7 @@ func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 		}
 	}
 	searchRoot = cur.path
-	depth = 2
+	depth = 5
 	return
 }
 
