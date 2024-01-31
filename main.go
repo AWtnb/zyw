@@ -18,17 +18,19 @@ func main() {
 		root    string
 		filer   string
 		exclude string
+		all     bool
 	)
 	flag.StringVar(&cur, "cur", "", "current directory")
 	flag.StringVar(&root, "root", "", "root directory")
 	flag.StringVar(&filer, "filer", "explorer.exe", "filer")
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
+	flag.BoolVar(&all, "all", false, "switch to search including file")
 	flag.Parse()
 	var fl Filer
 	fl.setPath(filer)
 	var cd CurrentDir
 	cd.setInfo(cur, root)
-	os.Exit(run(fl, cd, exclude))
+	os.Exit(run(fl, cd, exclude, all))
 }
 
 type Filer struct {
@@ -87,8 +89,8 @@ func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 	return
 }
 
-func (cur CurrentDir) getChildItemsFromRoot(exclude string) (found []string, err error) {
-	d := walk.Dir{All: false, Root: cur.searchRoot}
+func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (found []string, err error) {
+	d := walk.Dir{All: all, Root: cur.searchRoot}
 	d.SetWalkDepth(cur.depth)
 	d.SetWalkException(exclude)
 	if strings.HasPrefix(cur.searchRoot, "C:") {
@@ -125,8 +127,8 @@ func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
 	return childPaths[idx], nil
 }
 
-func run(fl Filer, cur CurrentDir, exclude string) int {
-	candidates, err := cur.getChildItemsFromRoot(exclude)
+func run(fl Filer, cur CurrentDir, exclude string, all bool) int {
+	candidates, err := cur.getChildItemsFromRoot(exclude, all)
 	if err != nil {
 		fmt.Println(err)
 		return 1
