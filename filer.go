@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/AWtnb/tablacus-fz-under/sys"
 )
 
 type Filer struct {
@@ -36,7 +38,7 @@ func (flr Filer) OpenSmart(path string) {
 	s := sc.Text()
 	if strings.EqualFold(s, "y") {
 		fmt.Println("[ACCEPTED] opening in default app.")
-		exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
+		sys.Open(path)
 		return
 	}
 	fmt.Println("[DENIED] opening its directory on filer.")
