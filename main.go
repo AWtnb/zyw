@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -26,35 +25,11 @@ func main() {
 	flag.StringVar(&exclude, "exclude", "", "path to skip searching (comma-separated)")
 	flag.BoolVar(&all, "all", false, "switch to search including file")
 	flag.Parse()
-	var fl Filer
-	fl.setPath(filer)
+	var f Filer
+	f.SetPath(filer)
 	var cd CurrentDir
 	cd.setInfo(cur, root)
-	os.Exit(run(fl, cd, exclude, all))
-}
-
-type Filer struct {
-	path string
-}
-
-func (fl *Filer) setPath(path string) {
-	if _, err := os.Stat(path); err == nil {
-		fl.path = path
-		return
-	}
-	fl.path = "explorer.exe"
-}
-
-func (fl Filer) open(path string) {
-	if _, err := os.Stat(path); err != nil {
-		exec.Command(fl.path).Start()
-		return
-	}
-	if fi, err := os.Stat(path); err == nil && fi.IsDir() {
-		exec.Command(fl.path, path).Start()
-		return
-	}
-	exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", path).Start()
+	os.Exit(run(f, cd, exclude, all))
 }
 
 type CurrentDir struct {
@@ -139,8 +114,9 @@ func run(fl Filer, cur CurrentDir, exclude string, all bool) int {
 		fmt.Println(err)
 		return 1
 	}
-	if 0 < len(se) {
-		fl.open(se)
+	if len(se) < 1 {
+		return 0
 	}
+	fl.OpenSmart(se)
 	return 0
 }
