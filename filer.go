@@ -37,11 +37,11 @@ func (flr Filer) OpenSmart(path string) {
 	sc.Scan()
 	s := sc.Text()
 	if strings.EqualFold(s, "y") {
-		fmt.Println("[ACCEPTED] opening in default app.")
 		sys.Open(path)
+		fmt.Println("[Y] default app is invoked to open file.")
 		return
 	}
-	fmt.Println("[DENIED] opening its directory on filer.")
 	d := filepath.Dir(path)
 	flr.Open(d)
+	fmt.Println("[N] its directory is opened on filer.")
 }
