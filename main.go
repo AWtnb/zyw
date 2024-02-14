@@ -44,10 +44,9 @@ func (cur *CurrentDir) setInfo(curPath string, root string) {
 }
 
 func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
-	depthLimit := 5
 	if root == ".." {
 		searchRoot = filepath.Dir(cur.path)
-		depth = depthLimit
+		depth = -1
 		return
 	}
 	elems := strings.Split(cur.path, string(os.PathSeparator))
@@ -61,7 +60,7 @@ func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
 		}
 	}
 	searchRoot = cur.path
-	depth = depthLimit
+	depth = -1
 	return
 }
 
@@ -69,7 +68,7 @@ func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (found []s
 	d := walk.Dir{All: all, Root: cur.searchRoot}
 	d.SetWalkDepth(cur.depth)
 	d.SetWalkException(exclude)
-	if strings.HasPrefix(cur.searchRoot, "C:") {
+	if strings.HasPrefix(cur.searchRoot, "C:") && (2 < walk.GetDepth(cur.path)) {
 		return d.GetChildItem()
 	}
 	found, err = d.GetChildItemWithEverything()
