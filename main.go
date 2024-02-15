@@ -40,10 +40,15 @@ type CurrentDir struct {
 
 func (cur *CurrentDir) setInfo(curPath string, root string) {
 	cur.path = curPath
-	cur.searchRoot, cur.depth = cur.configSearch(root)
+	cur.searchRoot, cur.depth = cur.configure(root)
 }
 
-func (cur CurrentDir) configSearch(root string) (searchRoot string, depth int) {
+func (cur CurrentDir) configure(root string) (searchRoot string, depth int) {
+	if root == "." {
+		searchRoot = cur.path
+		depth = -1
+		return
+	}
 	if root == ".." {
 		searchRoot = filepath.Dir(cur.path)
 		depth = -1
