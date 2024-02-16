@@ -69,16 +69,20 @@ func (cur CurrentDir) configure(root string) (searchRoot string, depth int) {
 	return
 }
 
-func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (withEverything bool, found []string, err error) {
+func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (assisted bool, found []string, err error) {
 	d := walk.Dir{All: all, Root: cur.searchRoot}
 	d.SetWalkDepth(cur.depth)
 	d.SetWalkException(exclude)
 	if strings.HasPrefix(cur.searchRoot, "C:") && (2 < walk.GetDepth(cur.path)) {
-		return d.GetChildItem()
+		assisted = false
+		found, err = d.GetChildItem()
+		return
 	}
-	withEverything, found, err = d.GetChildItemWithEverything()
+	assisted = true
+	found, err = d.GetChildItemWithEverything()
 	if err != nil || len(found) < 1 {
-		withEverything, found, err = d.GetChildItem()
+		assisted = false
+		found, err = d.GetChildItem()
 	}
 	return
 }
