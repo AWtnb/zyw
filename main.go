@@ -69,16 +69,16 @@ func (cur CurrentDir) configure(root string) (searchRoot string, depth int) {
 	return
 }
 
-func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (found []string, err error) {
+func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (withEverything bool, found []string, err error) {
 	d := walk.Dir{All: all, Root: cur.searchRoot}
 	d.SetWalkDepth(cur.depth)
 	d.SetWalkException(exclude)
 	if strings.HasPrefix(cur.searchRoot, "C:") && (2 < walk.GetDepth(cur.path)) {
 		return d.GetChildItem()
 	}
-	found, err = d.GetChildItemWithEverything()
+	withEverything, found, err = d.GetChildItemWithEverything()
 	if err != nil || len(found) < 1 {
-		found, err = d.GetChildItem()
+		withEverything, found, err = d.GetChildItem()
 	}
 	return
 }
@@ -93,14 +93,14 @@ func (cur CurrentDir) dropCurrent(childPaths []string) (paths []string) {
 	return
 }
 
-func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
+func (cur CurrentDir) selectItem(childPaths []string, prompt string) (string, error) {
 	if len(childPaths) < 1 {
 		return "", nil
 	}
 	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
 		rel, _ := filepath.Rel(cur.searchRoot, childPaths[i])
 		return rel
-	})
+	}, fuzzyfinder.WithPromptString(prompt))
 	if err != nil {
 		return "", err
 	}
@@ -108,12 +108,18 @@ func (cur CurrentDir) selectItem(childPaths []string) (string, error) {
 }
 
 func run(fl Filer, cur CurrentDir, exclude string, all bool) int {
-	candidates, err := cur.getChildItemsFromRoot(exclude, all)
+	withEv, candidates, err := cur.getChildItemsFromRoot(exclude, all)
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	se, err := cur.selectItem(cur.dropCurrent(candidates))
+	var prompt string
+	if withEv {
+		prompt = "#"
+	} else {
+		prompt = ">"
+	}
+	se, err := cur.selectItem(cur.dropCurrent(candidates), prompt)
 	if err != nil {
 		fmt.Println(err)
 		return 1
