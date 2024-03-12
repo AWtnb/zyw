@@ -131,6 +131,6 @@ func run(fl Filer, cur CurrentDir, exclude string, all bool) int {
 	if len(se) < 1 {
 		return 0
 	}
-	fl.OpenSmart(se)
+	fl.OpenSmart(se, cur.path)
 	return 0
 }
