@@ -5,7 +5,7 @@ go 1.21.1
 toolchain go1.21.4
 
 require (
-	github.com/AWtnb/go-everything v0.0.0-20240416011811-be6dbf064436
+	github.com/AWtnb/go-everything v1.0.0
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
 )
 
