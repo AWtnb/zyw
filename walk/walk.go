@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AWtnb/tablacus-fz-under/everything"
+	"github.com/AWtnb/go-everything"
 )
 
 type Dir struct {

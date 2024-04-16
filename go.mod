@@ -1,8 +1,13 @@
 module github.com/AWtnb/tablacus-fz-under
 
-go 1.20
+go 1.21.1
 
-require github.com/ktr0731/go-fuzzyfinder v0.7.0
+toolchain go1.21.4
+
+require (
+	github.com/AWtnb/go-everything v0.0.0-20240416011811-be6dbf064436
+	github.com/ktr0731/go-fuzzyfinder v0.7.0
+)
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
