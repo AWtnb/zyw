@@ -1,15 +1,14 @@
 module github.com/AWtnb/tablacus-fz-under
 
-go 1.21.1
-
-toolchain go1.21.4
+go 1.21.4
 
 require (
-	github.com/AWtnb/go-everything v1.0.0
+	github.com/AWtnb/go-walk v1.0.2
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
 )
 
 require (
+	github.com/AWtnb/go-everything v1.0.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.3 // indirect
 	github.com/ktr0731/go-ansisgr v0.1.0 // indirect

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AWtnb/tablacus-fz-under/walk"
+	"github.com/AWtnb/go-walk"
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
