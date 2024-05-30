@@ -3,7 +3,7 @@ module github.com/AWtnb/tablacus-fz-under
 go 1.21.4
 
 require (
-	github.com/AWtnb/go-walk v1.0.3
+	github.com/AWtnb/go-walk v1.0.4
 	github.com/ktr0731/go-fuzzyfinder v0.8.0
 )
 

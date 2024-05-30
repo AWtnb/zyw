@@ -70,9 +70,8 @@ func (cur *CurrentDir) setRoot() {
 }
 
 func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (assisted bool, found []string, err error) {
-	d := walk.Dir{All: all, Root: cur.root}
-	d.SetWalkDepth(-1)
-	d.SetWalkException(exclude)
+	var d walk.Dir
+	d.Init(cur.root, all, -1, exclude)
 	found, err = d.GetChildItemWithEverything()
 	assisted = true
 	if err != nil || len(found) < 1 {
