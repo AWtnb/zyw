@@ -97,7 +97,7 @@ func (cur CurrentDir) selectItem(childPaths []string, prompt string) (string, er
 	}
 	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
 		rel, _ := filepath.Rel(cur.root, childPaths[i])
-		return rel
+		return filepath.ToSlash(rel)
 	}, fuzzyfinder.WithPromptString(prompt))
 	if err != nil {
 		return "", err
