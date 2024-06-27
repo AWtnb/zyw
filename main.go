@@ -26,7 +26,7 @@ func main() {
 	flag.BoolVar(&all, "all", false, "switch to search including file")
 	flag.Parse()
 	var f Filer
-	f.SetPath(filer)
+	f.Init(filer)
 	cd := CurrentDir{Path: cur}
 	if -1 < offset {
 		cd.setRootRel(offset)
@@ -125,6 +125,9 @@ func run(fl Filer, cur CurrentDir, exclude string, all bool) int {
 	if len(se) < 1 {
 		return 0
 	}
-	fl.OpenSmart(se, cur.Path)
+	if err := fl.OpenSmart(se, cur.Path); err != nil {
+		fmt.Println(err)
+		return 1
+	}
 	return 0
 }
