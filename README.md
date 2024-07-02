@@ -2,7 +2,7 @@
 
 
 ```
-> .\tablacus-fz-under.exe -h
+> .\zyc.exe -h
 
   -all
         switch to search including file
