@@ -28,6 +28,8 @@ func main() {
 	var f Filer
 	f.Init(filer)
 
+	// cur = strings.TrimPrefix(cur, "\"")
+	// cur = strings.TrimSuffix(cur, "\"")
 	var d CurrentDir
 	d.Init(cur, offset, exclude, all)
 
