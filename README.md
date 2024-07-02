@@ -14,12 +14,12 @@
         filer (default "explorer.exe")
   -offset 0
         Specify the directory to start file traversing, by the number of layers from the current directory.
-        `0` for the current directory, `1` for the parent directory, `2` for its grand parent directory, and so on.
+        `0` for the current directory, `1` for the parent directory, `2` for its parent directory, and so on.
         If this value is negative, the path is traversed back to the directory containing the file `.root`. If no `.root` file is found, the current directory is used as the root of the search. (default -1)
+  -stdout
+        switch to stdout
 ```
 
-- List up subdirectories and select with fuzzy-finder.
-- Open selected directory on new tab.
 
 ## With [Tablacus Explorer](https://tablacus.github.io/explorer.html).
 
