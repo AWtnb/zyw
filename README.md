@@ -1,6 +1,5 @@
-# README
+# fuzZY Childitem finder
 
-Command line tool for [Tablacus Explorer](https://tablacus.github.io/explorer.html).
 
 ```
 > .\tablacus-fz-under.exe -h
@@ -21,5 +20,8 @@ Command line tool for [Tablacus Explorer](https://tablacus.github.io/explorer.ht
 
 - List up subdirectories and select with fuzzy-finder.
 - Open selected directory on new tab.
+
+## With [Tablacus Explorer](https://tablacus.github.io/explorer.html).
+
 
 ![img](image.png)

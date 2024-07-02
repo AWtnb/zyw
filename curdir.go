@@ -9,18 +9,33 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-type CurrentDir struct {
-	path string
-	root string
+func removeElem(sl []string, remove string) []string {
+	ss := []string{}
+	for _, s := range sl {
+		if s == remove {
+			continue
+		}
+		ss = append(ss, s)
+	}
+	return ss
 }
 
-func (cur *CurrentDir) Init(path string, offset int) {
+type CurrentDir struct {
+	path    string
+	root    string
+	exclude string
+	all     bool
+}
+
+func (cur *CurrentDir) Init(path string, offset int, exclude string, all bool) {
 	cur.path = path
 	if -1 < offset {
 		cur.setRootRel(offset)
 	} else {
 		cur.setRoot()
 	}
+	cur.exclude = exclude
+	cur.all = all
 }
 
 func (cur CurrentDir) Path() string {
@@ -55,32 +70,32 @@ func (cur *CurrentDir) setRoot() {
 	cur.root = cur.path
 }
 
-func (cur CurrentDir) getChildItemsFromRoot(exclude string, all bool) (assisted bool, found []string, err error) {
+func (cur CurrentDir) getChildItemsFromRoot() (assisted bool, found []string, err error) {
 	var d walk.Dir
-	d.Init(cur.root, all, -1, exclude)
+	d.Init(cur.root, cur.all, -1, cur.exclude)
 	found, err = d.GetChildItemWithEverything()
 	assisted = true
 	if err != nil || len(found) < 1 {
 		assisted = false
 		found, err = d.GetChildItem()
 	}
+	found = removeElem(found, cur.path)
 	return
 }
 
-func (cur CurrentDir) dropCurrent(childPaths []string) (paths []string) {
-	for _, p := range childPaths {
-		if p == cur.path {
-			continue
-		}
-		paths = append(paths, p)
-	}
-	return
-}
-
-func (cur CurrentDir) selectItem(childPaths []string, prompt string) (string, error) {
-	if len(childPaths) < 1 {
+func (cur CurrentDir) SelectItem() (string, error) {
+	withEv, childPaths, err := cur.getChildItemsFromRoot()
+	if err != nil || len(childPaths) < 1 {
 		return "", nil
 	}
+
+	var prompt string
+	if withEv {
+		prompt = "#"
+	} else {
+		prompt = ">"
+	}
+
 	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
 		rel, _ := filepath.Rel(cur.root, childPaths[i])
 		return filepath.ToSlash(rel)

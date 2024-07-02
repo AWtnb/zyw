@@ -1,4 +1,4 @@
-module github.com/AWtnb/tablacus-fz-under
+module github.com/AWtnb/zyc
 
 go 1.21.4
 
