@@ -28,8 +28,6 @@ func main() {
 	var f Filer
 	f.Init(filer)
 
-	// cur = strings.TrimPrefix(cur, "\"")
-	// cur = strings.TrimSuffix(cur, "\"")
 	var d CurrentDir
 	d.Init(cur, offset, exclude, all)
 
@@ -43,6 +41,9 @@ func run(fl Filer, cur CurrentDir, stdout bool) int {
 			fmt.Println(err.Error())
 		}
 		return 1
+	}
+	if len(p) < 1 {
+		return 0
 	}
 	if stdout {
 		fmt.Print(p)
