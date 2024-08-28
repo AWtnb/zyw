@@ -1,4 +1,4 @@
-# fuzZY Childitem finder
+# fuzZY Childitem (files / directories) finder
 
 
 ```
