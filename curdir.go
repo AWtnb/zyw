@@ -75,7 +75,7 @@ func (cur CurrentDir) getChildItemsFromRoot() (assisted bool, found []string, er
 	d.Init(cur.root, cur.all, -1, cur.exclude)
 	found, err = d.GetChildItemWithEverything()
 	assisted = true
-	if err != nil || len(found) < 1 {
+	if err != nil || len(found) < 2 {
 		assisted = false
 		found, err = d.GetChildItem()
 	}
