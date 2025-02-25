@@ -1,4 +1,4 @@
-module github.com/AWtnb/zyc
+module github.com/AWtnb/zyw
 
 go 1.21.4
 

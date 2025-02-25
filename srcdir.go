@@ -20,71 +20,66 @@ func removeElem(sl []string, remove string) []string {
 	return ss
 }
 
-type CurrentDir struct {
+type SrcDir struct {
 	path    string
 	root    string
 	exclude string
 	all     bool
 }
 
-func (cur *CurrentDir) Init(path string, offset int, exclude string, all bool) {
-	cur.path = path
+func (sd *SrcDir) Init(path string, offset int, exclude string, all bool) {
+	sd.path = path
 	if -1 < offset {
-		cur.setRootRel(offset)
+		sd.setRootRel(offset)
 	} else {
-		cur.setRoot()
+		sd.setRoot()
 	}
-	cur.exclude = exclude
-	cur.all = all
+	sd.exclude = exclude
+	sd.all = all
 }
 
-func (cur CurrentDir) Path() string {
-	return cur.path
+func (sd SrcDir) pathElems() []string {
+	return strings.Split(sd.path, string(os.PathSeparator))
 }
 
-func (cur CurrentDir) pathElems() []string {
-	return strings.Split(cur.path, string(os.PathSeparator))
-}
-
-func (cur *CurrentDir) setRootRel(offset int) {
-	elems := cur.pathElems()
+func (sd *SrcDir) setRootRel(offset int) {
+	elems := sd.pathElems()
 	if 0 < offset && offset < len(elems) {
 		ss := elems[0 : len(elems)-offset]
-		cur.root = strings.Join(ss, string(os.PathSeparator))
+		sd.root = strings.Join(ss, string(os.PathSeparator))
 		return
 	}
-	cur.root = cur.path
+	sd.root = sd.path
 }
 
-func (cur *CurrentDir) setRoot() {
-	elems := cur.pathElems()
+func (sd *SrcDir) setRoot() {
+	elems := sd.pathElems()
 	for i := 0; i < len(elems); i++ {
 		ln := len(elems) - i
 		p := strings.Join(elems[0:ln], string(os.PathSeparator))
 		if _, err := os.Stat(filepath.Join(p, ".root")); err == nil {
-			cur.root = p
+			sd.root = p
 			return
 		}
-
 	}
-	cur.root = cur.path
+	sd.root = sd.path
 }
 
-func (cur CurrentDir) getChildItemsFromRoot() (assisted bool, found []string, err error) {
+func (sd SrcDir) getChildItemsFromRoot() (assisted bool, found []string, err error) {
 	var d walk.Dir
-	d.Init(cur.root, cur.all, -1, cur.exclude)
+	d.Init(sd.root, sd.all, -1, sd.exclude)
 	found, err = d.GetChildItemWithEverything()
 	assisted = true
 	if err != nil || len(found) < 2 {
 		assisted = false
 		found, err = d.GetChildItem()
 	}
-	found = removeElem(found, cur.path)
+	found = removeElem(found, sd.path)
 	return
 }
 
-func (cur CurrentDir) SelectItem() (string, error) {
-	withEv, childPaths, err := cur.getChildItemsFromRoot()
+func (sd SrcDir) SelectItem() (string, error) {
+	withEv, childPaths, err := sd.getChildItemsFromRoot()
 	if err != nil || len(childPaths) < 1 {
 		return "", nil
 	}
@@ -97,7 +92,7 @@ func (cur CurrentDir) SelectItem() (string, error) {
 	}
 
 	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
-		rel, _ := filepath.Rel(cur.root, childPaths[i])
+		rel, _ := filepath.Rel(sd.root, childPaths[i])
 		return filepath.ToSlash(rel)
 	}, fuzzyfinder.WithPromptString(prompt))
 	if err != nil {
