@@ -9,17 +9,6 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 )
 
-func removeElem(sl []string, remove string) []string {
-	ss := []string{}
-	for _, s := range sl {
-		if s == remove {
-			continue
-		}
-		ss = append(ss, s)
-	}
-	return ss
-}
-
 type SrcDir struct {
 	path    string
 	root    string
@@ -74,7 +63,6 @@ func (sd SrcDir) getChildItemsFromRoot() (assisted bool, found []string, err err
 		assisted = false
 		found, err = d.GetChildItem()
 	}
-	found = removeElem(found, sd.path)
 	return
 }
 
