@@ -2,6 +2,10 @@ github.com/AWtnb/go-everything v1.0.2 h1:jYswPNGuf73NYvgLQMcIo6NPxG8F7p5vvuNgfkg
 github.com/AWtnb/go-everything v1.0.2/go.mod h1:zdhpGYcj7ixaLMFIUbW254KyNHyXLQ7e8r8UHMVL6xQ=
 github.com/AWtnb/go-walk v1.0.8 h1:2VLNoBhCkeymEsyAKZV5x9BoRUkCpPQ+VNlZ60ygrKs=
 github.com/AWtnb/go-walk v1.0.8/go.mod h1:Wx/AZkwHHHjWH1ktVAkERzp62mJ8lGGxYOkHugyTFcU=
+github.com/AWtnb/go-walk v1.0.9-0.20250523012743-8cb3be4f0280 h1:8gaMfzxIwcXrrIB3l4sLx0IyXMDfV+dPkaFn5ID5UNo=
+github.com/AWtnb/go-walk v1.0.9-0.20250523012743-8cb3be4f0280/go.mod h1:Wx/AZkwHHHjWH1ktVAkERzp62mJ8lGGxYOkHugyTFcU=
+github.com/AWtnb/go-walk v1.1.0 h1:6gBEaDic9PF7ckhgSjZZkCj4fFW7uFwm2viD3boWlBI=
+github.com/AWtnb/go-walk v1.1.0/go.mod h1:Wx/AZkwHHHjWH1ktVAkERzp62mJ8lGGxYOkHugyTFcU=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/encoding v1.0.1 h1:YzKZckdBL6jVt2Gc+5p82qhrGiqMdG/eNs6Wy0u3Uhw=
 github.com/gdamore/encoding v1.0.1/go.mod h1:0Z0cMFinngz9kS1QfMjCP8TY7em3bZYeeklsSDPivEo=
