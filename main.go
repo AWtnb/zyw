@@ -23,12 +23,12 @@ func (wr *WalkRoot) Init(path string, exclude string, all bool) {
 }
 
 func (wr WalkRoot) walk() (prompt string, found []string, err error) {
-	var d walk.Dir
-	d.Init(wr.path, wr.all, -1, wr.exclude)
-	found, err = d.GetChildItemWithEverything()
-	if err != nil || len(found) < 1 {
+	var w walk.Walker
+	w.Init(wr.path, wr.all, -1, wr.exclude)
+	found, err = w.EverythingTraverse()
+	if err != nil || len(found) < 2 {
 		prompt = ">"
-		found, err = d.GetChildItem()
+		found, err = w.Traverse()
 	} else {
 		prompt = "#"
 	}
