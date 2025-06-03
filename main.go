@@ -7,24 +7,24 @@ import (
 	"path/filepath"
 
 	"github.com/AWtnb/go-walk"
-	"github.com/ktr0731/go-fuzzyfinder"
+	fzf "github.com/junegunn/fzf/src"
 )
 
-type WalkRoot struct {
+type Root struct {
 	path    string
 	exclude string
 	all     bool
 }
 
-func (wr *WalkRoot) Init(path string, exclude string, all bool) {
-	wr.path = path
-	wr.exclude = exclude
-	wr.all = all
+func (r *Root) Init(path string, exclude string, all bool) {
+	r.path = path
+	r.exclude = exclude
+	r.all = all
 }
 
-func (wr WalkRoot) walk() (prompt string, found []string, err error) {
+func (r Root) walk() (prompt string, found []string, err error) {
 	var w walk.Walker
-	w.Init(wr.path, wr.all, -1, wr.exclude)
+	w.Init(r.path, r.all, -1, r.exclude)
 	found, err = w.EverythingTraverse()
 	if err != nil || len(found) < 2 {
 		prompt = ">"
@@ -35,36 +35,51 @@ func (wr WalkRoot) walk() (prompt string, found []string, err error) {
 	return
 }
 
-func (wr WalkRoot) SelectItem() (string, error) {
-	prompt, childPaths, err := wr.walk()
-	if err != nil || len(childPaths) < 1 {
-		return "", nil
-	}
-
-	idx, err := fuzzyfinder.Find(childPaths, func(i int) string {
-		rel, _ := filepath.Rel(wr.path, childPaths[i])
-		return filepath.ToSlash(rel)
-	}, fuzzyfinder.WithPromptString(prompt))
-	if err != nil {
-		return "", err
-	}
-	return childPaths[idx], nil
-}
-
+// https://gist.github.com/junegunn/193990b65be48a38aac6ac49d5669170
 func run(root string, exclude string, all bool) int {
-	var r WalkRoot
+	var r Root
 	r.Init(root, exclude, all)
-	p, err := r.SelectItem()
+	prompt, found, err := r.walk()
 	if err != nil {
-		if err != fuzzyfinder.ErrAbort {
-			fmt.Println(err.Error())
-		}
+		fmt.Println(err.Error())
 		return 1
 	}
-	if 0 < len(p) {
-		fmt.Print(p)
+
+	inputChan := make(chan string)
+	go func() {
+		for _, p := range found {
+			rel, _ := filepath.Rel(root, p)
+			inputChan <- rel
+		}
+		close(inputChan)
+	}()
+
+	outputChan := make(chan string)
+	go func() {
+		for s := range outputChan {
+			fmt.Print(filepath.Join(root, s))
+		}
+	}()
+
+	options, err := fzf.ParseOptions(
+		true,
+		[]string{fmt.Sprintf("--prompt=%s", prompt)},
+	)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 1
 	}
-	return 0
+
+	options.Input = inputChan
+	options.Output = outputChan
+
+	code, err := fzf.Run(options)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 1
+	}
+
+	return code
 }
 
 func main() {
