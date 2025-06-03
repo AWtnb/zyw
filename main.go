@@ -10,21 +10,9 @@ import (
 	fzf "github.com/junegunn/fzf/src"
 )
 
-type Root struct {
-	path    string
-	exclude string
-	all     bool
-}
-
-func (r *Root) Init(path string, exclude string, all bool) {
-	r.path = path
-	r.exclude = exclude
-	r.all = all
-}
-
-func (r Root) walk() (prompt string, found []string, err error) {
+func find(path string, exclude string, all bool) (prompt string, found []string, err error) {
 	var w walk.Walker
-	w.Init(r.path, r.all, -1, r.exclude)
+	w.Init(path, all, -1, exclude)
 	found, err = w.EverythingTraverse()
 	if err != nil || len(found) < 2 {
 		prompt = ">"
@@ -37,9 +25,7 @@ func (r Root) walk() (prompt string, found []string, err error) {
 
 // https://gist.github.com/junegunn/193990b65be48a38aac6ac49d5669170
 func run(root string, exclude string, all bool) int {
-	var r Root
-	r.Init(root, exclude, all)
-	prompt, found, err := r.walk()
+	prompt, found, err := find(root, exclude, all)
 	if err != nil {
 		fmt.Println(err.Error())
 		return 1
