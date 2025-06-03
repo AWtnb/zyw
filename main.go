@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/AWtnb/go-walk"
 	fzf "github.com/junegunn/fzf/src"
@@ -40,8 +41,11 @@ func run(root string, exclude string, all bool) int {
 		close(inputChan)
 	}()
 
+	var wg sync.WaitGroup
 	outputChan := make(chan string)
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for s := range outputChan {
 			fmt.Print(filepath.Join(root, s))
 		}
@@ -60,6 +64,8 @@ func run(root string, exclude string, all bool) int {
 	options.Output = outputChan
 
 	code, err := fzf.Run(options)
+	close(outputChan)
+	wg.Wait()
 	if err != nil {
 		fmt.Println(err.Error())
 		return 1
