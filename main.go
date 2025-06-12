@@ -53,7 +53,7 @@ func run(root string, exclude string, all bool) int {
 
 	options, err := fzf.ParseOptions(
 		true,
-		[]string{fmt.Sprintf("--prompt=%s", prompt)},
+		[]string{fmt.Sprintf("--prompt=%s", prompt), "--margin=1"},
 	)
 	if err != nil {
 		fmt.Println(err.Error())
