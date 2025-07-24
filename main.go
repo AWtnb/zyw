@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/AWtnb/go-walk"
@@ -30,6 +31,19 @@ func run(root string, exclude string, all bool) int {
 	if err != nil {
 		fmt.Println(err.Error())
 		return 1
+	}
+
+	if 1 < len(found) {
+		// sort in descending order
+		slices.SortFunc(found, func(a, b string) int {
+			if a > b {
+				return -1
+			}
+			if a < b {
+				return 1
+			}
+			return 0
+		})
 	}
 
 	inputChan := make(chan string)
