@@ -27,6 +27,10 @@ func find(path string, exclude string, all bool) (prompt string, found []string,
 
 // https://gist.github.com/junegunn/193990b65be48a38aac6ac49d5669170
 func run(root string, exclude string, all bool) int {
+	if root == "" {
+		fmt.Println("Specify root path.")
+		return 1
+	}
 	prompt, found, err := find(root, exclude, all)
 	if err != nil {
 		fmt.Println(err.Error())

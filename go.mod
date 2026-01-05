@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/AWtnb/go-walk v1.2.1
-	github.com/junegunn/fzf v0.67.0
+	github.com/junegunn/fzf v0.62.0
 )
 
 require (
