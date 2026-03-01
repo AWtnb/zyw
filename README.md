@@ -15,3 +15,18 @@ Traverse directory and select path with fuzzy-finder.
 ```
 
 The directory where the [`.root`](.root) is placed should be the starting point of the traversal.
+
+
+## Install
+
+```
+go install github.com/AWtnb/zyw@latest
+```
+
+or
+
+```
+go install .
+```
+
+after cloning this repo.
