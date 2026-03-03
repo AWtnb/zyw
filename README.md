@@ -26,7 +26,7 @@ go install github.com/AWtnb/zyw@latest
 or
 
 ```
-go install .
+go install
 ```
 
 after cloning this repo.
